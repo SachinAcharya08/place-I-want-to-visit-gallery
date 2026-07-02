@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Places I Want to Visit Before I Die</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Cormorant+Garamond:ital@1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0b0a08;
+    --panel:#14120D;
+    --maroon:#3D1418;
+    --gold:#BF9B4A;
+    --gold-dim:rgba(191,155,74,0.45);
+    --parchment:#EDE6D6;
+    --brass:#8C8064;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{
+    background:var(--ink);
+    color:var(--parchment);
+    font-family:'EB Garamond', serif;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .display{ font-family:'Cinzel', serif; font-weight:600; }
+
+  /* ===== ambient background ===== */
+  #bg{
+    position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(ellipse at 18% 20%, rgba(70,64,50,0.30), transparent 55%),
+      radial-gradient(ellipse at 82% 78%, rgba(70,64,50,0.24), transparent 55%),
+      var(--ink);
+  }
+  .ember{
+    position:fixed; z-index:1; border-radius:50%;
+    background:radial-gradient(circle, rgba(191,155,74,0.8), rgba(191,155,74,0));
+    pointer-events:none; opacity:0;
+    animation:rise linear infinite;
+  }
+  @keyframes rise{
+    0%{ transform:translateY(0) translateX(0); opacity:0; }
+    10%{ opacity:0.5; }
+    90%{ opacity:0.25; }
+    100%{ transform:translateY(-110vh) translateX(20px); opacity:0; }
+  }
+
+  /* ===== header ===== */
+  header{
+    position:fixed; top:0; left:0; right:0; z-index:5;
+    display:flex; flex-direction:column; align-items:center;
+    padding:34px 20px 0;
+    pointer-events:none;
+  }
+  header .eyebrow{
+    font-family:'Cinzel', serif; font-size:12px; letter-spacing:4px;
+    color:var(--brass);
+  }
+  header h1{
+    font-size:clamp(26px, 4vw, 42px); letter-spacing:5px;
+    margin-top:8px; text-align:center;
+  }
+  header .rule{
+    width:70px; height:1px; background:var(--gold-dim); margin-top:14px;
+  }
+
+  /* ===== stage / ring ===== */
+  #stage{
+    position:fixed; inset:0; z-index:2;
+    display:flex; align-items:center; justify-content:center;
+    perspective:1800px;
+    cursor:grab;
+  }
+  #stage.dragging{ cursor:grabbing; }
+  #stage.focused{ pointer-events:none; }
+
+  #tilt{
+    width:1px; height:1px;
+    transform-style:preserve-3d;
+    transition:transform 0.4s ease-out;
+    -webkit-transform-style:preserve-3d;
+    will-change:transform;
+  }
+  #ring{
+    position:relative;
+    width:1px; height:1px;
+    transform-style:preserve-3d;
+    will-change:transform;
+    -webkit-transform-style:preserve-3d;
+  }
+
+  .card{
+    position:absolute;
+    top:-190px; left:-140px;
+    width:280px; height:380px;
+    background:var(--panel);
+    border:1px solid var(--gold-dim);
+    box-shadow:0 30px 60px rgba(0,0,0,0.55);
+    backface-visibility:hidden;
+    transform-style:preserve-3d;
+    -webkit-backface-visibility:hidden;
+    -webkit-transform-style:preserve-3d;
+    will-change:transform, opacity, filter;
+    transform:translateZ(0);
+    transition:opacity 0.5s ease, filter 0.5s ease, transform 0.7s cubic-bezier(.22,.68,.35,1), width 0.7s cubic-bezier(.22,.68,.35,1), height 0.7s cubic-bezier(.22,.68,.35,1), top 0.7s cubic-bezier(.22,.68,.35,1), left 0.7s cubic-bezier(.22,.68,.35,1);
+    cursor:pointer;
+  }
+  .card .photo{
+    position:relative;
+    width:100%; height:66%;
+    background:repeating-linear-gradient(45deg, #3a352b 0, #3a352b 2px, #2c281f 2px, #2c281f 30px);
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;
+    overflow:hidden;
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+    transform:translateZ(0.1px);
+  }
+  .card .photo img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none; backface-visibility:hidden; -webkit-backface-visibility:hidden; transform:translateZ(0.2px); will-change:transform; }
+  .card .photo .slot{
+    font-family:'Cinzel', serif; font-size:12px; letter-spacing:2px;
+    color:var(--parchment); background:rgba(10,8,5,0.55); padding:6px 12px; z-index:1;
+  }
+  .card .ribbon{
+    position:absolute; top:0; left:18px; z-index:3;
+    width:36px; height:56px; background:#0D0B08;
+    border-left:1px solid var(--gold-dim); border-right:1px solid var(--gold-dim);
+    clip-path:polygon(0 0, 100% 0, 100% 84%, 50% 100%, 0 84%);
+    display:flex; align-items:flex-start; justify-content:center; padding-top:10px;
+  }
+  .card .ribbon span{ font-family:'Cinzel', serif; font-size:16px; color:var(--gold); }
+  .card .info{
+    padding:14px 16px; height:34%;
+    display:flex; flex-direction:column; justify-content:center;
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+    transform:translateZ(0.1px);
+  }
+  .card .info .place{ font-size:19px; letter-spacing:1px; line-height:1.15; }
+  .card .info .country{
+    font-family:'Cormorant Garamond', serif; font-style:italic; font-size:15px;
+    color:var(--gold); margin-top:3px;
+  }
+
+  .card.dim{ opacity:0.35; filter:blur(1px) saturate(0.7); }
+  .card.focused{
+    width:460px; height:600px;
+    top:-300px; left:-230px;
+    z-index:20;
+    box-shadow:0 50px 100px rgba(0,0,0,0.7);
+  }
+  .card.focused .info .place{ font-size:30px; }
+  .card.focused .info .country{ font-size:20px; }
+  .card.focused .slot{ font-size:14px; }
+
+  /* ===== detail panel ===== */
+  #detail{
+    position:fixed; top:0; right:0; bottom:0; z-index:30;
+    width:380px; max-width:88vw;
+    background:var(--maroon);
+    padding:70px 40px 40px;
+    transform:translateX(100%);
+    transition:transform 0.55s cubic-bezier(.22,.68,.35,1);
+    display:flex; flex-direction:column;
+    box-shadow:-30px 0 60px rgba(0,0,0,0.5);
+  }
+  #detail.open{ transform:translateX(0); }
+  #detail .sigil{ align-self:flex-end; opacity:0.9; margin-bottom:20px; }
+  #detail .ref-label{
+    font-family:'Cinzel', serif; font-size:13px; letter-spacing:2px;
+    color:#D8B96A; text-align:center; line-height:1.5;
+  }
+  #detail .rule-sm{ width:60px; height:1px; background:rgba(216,185,106,0.5); margin:16px auto; }
+  #detail .ref-text{ font-family:'EB Garamond', serif; font-size:17px; line-height:1.6; color:#EDE0D8; text-align:center; }
+  #detail .ref-text.second{ margin-top:18px; font-style:italic; color:#D8B96A; }
+  #detail .key-scene{
+    margin-top:26px; padding-top:22px;
+    border-top:1px solid rgba(216,185,106,0.25);
+  }
+  #detail .key-scene .ks-label{
+    font-family:'Cinzel', serif; font-size:12px; letter-spacing:2px;
+    color:var(--gold); margin-bottom:10px;
+  }
+  #detail .key-scene .thumb{
+    width:100%; height:84px;
+    background:repeating-linear-gradient(45deg, #3a352b 0, #3a352b 2px, #2c281f 2px, #2c281f 24px);
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:12px;
+    position:relative; overflow:hidden;
+  }
+  #detail .key-scene .thumb img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none;
+  }
+  #detail .key-scene .thumb span{
+    font-family:'Cinzel', serif; font-size:10px; letter-spacing:1.5px;
+    color:var(--parchment); background:rgba(10,8,5,0.55); padding:5px 10px; text-align:center;
+  }
+  #detail .key-scene ul{ list-style:none; }
+  #detail .key-scene li{
+    font-family:'EB Garamond', serif; font-size:15px; line-height:1.55;
+    color:#EDE0D8; padding-left:16px; position:relative; margin-bottom:9px;
+  }
+  #detail .key-scene li::before{ content:'•'; position:absolute; left:0; color:var(--gold); }
+  #detail .key-scene p{
+    font-family:'EB Garamond', serif; font-size:15px; line-height:1.6; color:#EDE0D8;
+  }
+  #detail .close{
+    position:absolute; top:24px; right:28px;
+    background:none; border:none; color:var(--gold);
+    font-family:'Cinzel', serif; font-size:13px; letter-spacing:2px;
+    cursor:pointer; padding:8px;
+  }
+  #detail .close:hover{ color:var(--parchment); }
+
+  /* ===== nav dots ===== */
+  #dots{
+    position:fixed; bottom:34px; left:0; right:0; z-index:5;
+    display:flex; justify-content:center; gap:12px;
+  }
+  #dots button{
+    width:9px; height:9px; border-radius:50%;
+    background:rgba(237,230,214,0.25);
+    border:1px solid var(--gold-dim);
+    cursor:pointer; padding:0;
+    transition:background 0.3s;
+  }
+  #dots button.active{ background:var(--gold); }
+
+  #hint{
+    position:fixed; bottom:64px; left:0; right:0; z-index:5;
+    text-align:center; font-family:'Cinzel', serif; font-size:11px;
+    letter-spacing:2px; color:var(--brass);
+    transition:opacity 0.4s;
+  }
+  #hint.hide{ opacity:0; }
+
+  @media (max-width: 640px){
+    .card{ width:190px; height:270px; top:-135px; left:-95px; }
+    .card.focused{ width:300px; height:420px; top:-210px; left:-150px; }
+    #detail{ width:100%; padding:60px 26px 30px; }
+    header h1{ letter-spacing:3px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="bg"></div>
+<div id="embers"></div>
+
+<header>
+  <div class="eyebrow">SIX DESTINATIONS · ENDLESS STORIES</div>
+  <h1 class="display">PLACES I WANT TO VISIT BEFORE I DIE</h1>
+  <div class="rule"></div>
+</header>
+
+<div id="stage">
+  <div id="tilt">
+    <div id="ring"></div>
+  </div>
+</div>
+
+<div id="detail">
+  <button class="close" id="closeDetail">CLOSE ✕</button>
+  <div class="sigil" id="detailSigil"></div>
+  <div class="ref-label">GAME OF THRONES<br>REFERENCE</div>
+  <div class="rule-sm"></div>
+  <div class="ref-text" id="detailRef1"></div>
+  <div class="ref-text second" id="detailRef2"></div>
+  <div class="key-scene">
+    <div class="ks-label">KEY SCENE</div>
+    <div class="thumb"><img id="detailKeySceneImg" alt="key scene" onload="this.style.display='block'; this.nextElementSibling.style.display='none'" onerror="this.style.display='none'"><span>scene image</span></div>
+    <div id="detailKeyScene"></div>
+  </div>
+</div>
+
+<nav id="dots"></nav>
+<div id="hint">DRAG OR SCROLL TO ROTATE · CLICK A CARD TO FOCUS</div>
+
+<script>
+/* =====================================================================
+   TO USE YOUR OWN PHOTOS — folder setup:
+
+   got/                        <- open THIS folder in VS Code
+     bucket-list-3d-gallery.html
+     images/
+       1.jpg   → Basque Coast, Spain
+       2.jpg   → Dubrovnik, Croatia
+       3.jpg   → The Dark Hedges, Northern Ireland
+       4.jpg   → Grjótagjá Lava Cave, Iceland
+       5.jpg   → Seville, Spain
+       6.jpg   → Doune Castle, Scotland
+
+   The gallery and detail panel both use these six image files from images/.
+   If you replace the files later, keep the same names and the HTML will keep working.
+   ===================================================================== */
+const DESTINATIONS = [
+  {
+    place: "BASQUE COAST,", country: "Spain", img: "images/1.jpg", keySceneImg: "images/1.jpg",
+    ref1: "These flysch cliffs stood in for Dragonstone's shoreline in the show's later seasons.",
+    ref2: "Where dragons once nested, the Atlantic still crashes on.",
+    sigil: "wave",
+    keyScene: [
+      "Daenerys returns home, walking these black-cliff shores to reclaim the seat her family fled a generation earlier."
+    ]
+  },
+  {
+    place: "DUBROVNIK,", country: "Croatia", img: "images/2.jpg", keySceneImg: "images/2.jpg",
+    ref1: "The old town's ramparts and squares were filmed as King's Landing.",
+    ref2: "Walk where kings and queens once schemed.",
+    sigil: "crown",
+    keyScene: [
+      "Cersei's long, silent walk through the city as penance for her sins.",
+      "The Purple Wedding — Joffrey's reign ends at his own feast.",
+      "Tyrion stands trial for a crime he didn't commit, and demands trial by combat."
+    ]
+  },
+  {
+    place: "THE DARK HEDGES,", country: "Northern Ireland", img: "images/3.jpg", keySceneImg: "images/3.jpg",
+    ref1: "This beech avenue was filmed as the Kingsroad, the route Arya took fleeing King's Landing in disguise.",
+    ref2: "Every tree here has witnessed a story.",
+    sigil: "star",
+    keyScene: [
+      "Arya slips out of the city gates disguised as a boy — the first step of a journey that remakes her."
+    ]
+  },
+  {
+    place: "GRJÓTAGJÁ LAVA CAVE,", country: "Iceland", img: "images/4.jpg", keySceneImg: "images/4.jpg",
+    ref1: "This geothermal cave was the backdrop for Jon Snow and Ygritte's scene beyond the Wall.",
+    ref2: "Fire and ice, warm enough for a moment's peace.",
+    sigil: "flame",
+    keyScene: [
+      "Jon and Ygritte find a rare, private warmth in the middle of enemy territory."
+    ]
+  },
+  {
+    place: "SEVILLE,", country: "Spain", img: "images/5.jpg", keySceneImg: "images/5.jpg",
+    ref1: "The Alcázar's courtyards became the sun-soaked Water Gardens of Dorne.",
+    ref2: "Where the Martells kept their quiet counsel.",
+    sigil: "sun",
+    keyScene: [
+      "Doran and Oberyn debate how Dorne should answer for Elia's death.",
+      "Oberyn Martell sets out to seek justice for his murdered sister."
+    ]
+  },
+  {
+    place: "DOUNE CASTLE,", country: "Scotland", img: "images/6.jpg", keySceneImg: "images/6.jpg",
+    ref1: "Doune's courtyard was Winterfell's on-screen debut, the ancestral seat of House Stark.",
+    ref2: "Honor. Duty. A long memory for winter.",
+    sigil: "wolf",
+    keyScene: [
+      "King Robert's procession arrives at Winterfell's gates, setting the whole story in motion.",
+      "The Great Hall fills for a feast thick with old loyalties and new tension."
+    ]
+  }
+];
+
+const SIGILS = {
+  wave: `<path d="M30 8 C18 20 10 30 10 40 C10 50 20 56 30 56 C40 56 50 50 50 40 C50 30 42 20 30 8 Z" fill="none" stroke="#EDE6D6" stroke-width="2.2"/><path d="M17 40 Q30 27 43 40" fill="none" stroke="#EDE6D6" stroke-width="1.6"/>`,
+  crown: `<path d="M12 34 L18 14 L26 28 L30 10 L34 28 L42 14 L48 34 Z" fill="none" stroke="#EDE6D6" stroke-width="2.2" stroke-linejoin="round"/><line x1="12" y1="34" x2="48" y2="34" stroke="#EDE6D6" stroke-width="2.2"/>`,
+  star: `<path d="M30 8 L36 22 L51 24 L40 34 L43 49 L30 41 L17 49 L20 34 L9 24 L24 22 Z" fill="none" stroke="#EDE6D6" stroke-width="2"/>`,
+  flame: `<path d="M30 8 C25 18 20 24 20 32 C20 40 24 46 30 46 C36 46 40 40 40 32 C40 24 35 18 30 8 Z" fill="none" stroke="#EDE6D6" stroke-width="2.2"/><path d="M24 32 L36 32" stroke="#EDE6D6" stroke-width="1.4" opacity="0.7"/>`,
+  sun: `<circle cx="30" cy="30" r="12" fill="none" stroke="#EDE6D6" stroke-width="2.2"/><line x1="30" y1="6" x2="30" y2="54" stroke="#EDE6D6" stroke-width="2.2"/>`,
+  wolf: `<ellipse cx="30" cy="26" rx="10" ry="13" fill="none" stroke="#EDE6D6" stroke-width="2.2"/><path d="M20 26 L11 19 M20 29 L10 29 M40 26 L49 19 M40 29 L50 29" stroke="#EDE6D6" stroke-width="1.8"/>`
+};
+
+const N = DESTINATIONS.length;
+const RADIUS = 460;
+const ring = document.getElementById('ring');
+const stage = document.getElementById('stage');
+const tilt = document.getElementById('tilt');
+const dotsNav = document.getElementById('dots');
+const detail = document.getElementById('detail');
+const hint = document.getElementById('hint');
+
+let rotation = 0;          // current ring rotation (deg)
+let velocity = 0.06;       // auto-rotate speed
+let dragging = false;
+let dragStartX = 0, dragStartRotation = 0;
+let lastDragX = 0, dragVelocity = 0;
+let focusedIndex = null;
+let interacted = false;
+
+/* build cards */
+const cardEls = DESTINATIONS.map((d, i) => {
+  const angle = (360 / N) * i;
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.dataset.index = i;
+  card.style.transform = `rotateY(${angle}deg) translateZ(${RADIUS}px)`;
+
+  card.innerHTML = `
+    <div class="ribbon"><span>${i + 1}</span></div>
+    <div class="photo">
+      <img src="${d.img}" alt="${d.place}" onload="this.style.display='block'; this.nextElementSibling.style.display='none'" onerror="this.style.display='none'">
+      <span class="slot">loading image</span>
+    </div>
+    <div class="info">
+      <div class="place display">${d.place}</div>
+      <div class="country">${d.country}</div>
+    </div>
+  `;
+  card.addEventListener('click', (e) => {
+    if (dragged) return;
+    toggleFocus(i);
+  });
+  ring.appendChild(card);
+  return card;
+});
+
+/* nav dots */
+DESTINATIONS.forEach((d, i) => {
+  const b = document.createElement('button');
+  b.addEventListener('click', () => goToIndex(i));
+  dotsNav.appendChild(b);
+});
+const dotEls = [...dotsNav.children];
+
+function angleForIndex(i){ return (360 / N) * i; }
+
+function nearestIndex(){
+  // which card is closest to the front (angle ~ -rotation mod 360, minimized)
+  let best = 0, bestDiff = Infinity;
+  for (let i = 0; i < N; i++){
+    const a = ((angleForIndex(i) + rotation) % 360 + 360) % 360;
+    const diff = Math.min(a, 360 - a);
+    if (diff < bestDiff){ bestDiff = diff; best = i; }
+  }
+  return best;
+}
+
+function updateDots(){
+  const n = nearestIndex();
+  dotEls.forEach((el, i) => el.classList.toggle('active', i === n));
+}
+
+function render(){
+  ring.style.transform = `rotateY(${rotation}deg)`;
+  updateDots();
+}
+
+function goToIndex(i){
+  interacted = true;
+  hint.classList.add('hide');
+  // rotate so card i faces front
+  const target = -angleForIndex(i);
+  // shortest path
+  let diff = ((target - rotation) % 360 + 540) % 360 - 180;
+  animateRotationBy(diff);
+}
+
+let rotAnimFrame = null;
+function animateRotationBy(delta){
+  if (rotAnimFrame) cancelAnimationFrame(rotAnimFrame);
+  const start = rotation;
+  const end = rotation + delta;
+  const duration = 600;
+  const t0 = performance.now();
+  function step(now){
+    const t = Math.min(1, (now - t0) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    rotation = start + (end - start) * eased;
+    render();
+    if (t < 1) rotAnimFrame = requestAnimationFrame(step);
+  }
+  rotAnimFrame = requestAnimationFrame(step);
+}
+
+/* focus / detail panel */
+function toggleFocus(i){
+  interacted = true;
+  hint.classList.add('hide');
+  if (focusedIndex === i){
+    closeFocus();
+    return;
+  }
+  focusedIndex = i;
+  stage.classList.add('focused');
+  cardEls.forEach((c, idx) => {
+    c.classList.toggle('focused', idx === i);
+    c.classList.toggle('dim', idx !== i);
+    c.style.pointerEvents = 'auto';
+  });
+  const d = DESTINATIONS[i];
+  document.getElementById('detailSigil').innerHTML =
+    `<svg width="52" height="52" viewBox="0 0 60 60">${SIGILS[d.sigil]}</svg>`;
+  document.getElementById('detailRef1').textContent = d.ref1;
+  document.getElementById('detailRef2').textContent = d.ref2;
+  document.getElementById('detailKeySceneImg').src = d.keySceneImg;
+  const ksEl = document.getElementById('detailKeyScene');
+  if (d.keyScene.length > 1){
+    ksEl.innerHTML = '<ul>' + d.keyScene.map(s => `<li>${s}</li>`).join('') + '</ul>';
+  } else {
+    ksEl.innerHTML = `<p>${d.keyScene[0]}</p>`;
+  }
+  detail.classList.add('open');
+  goToIndex(i);
+}
+function closeFocus(){
+  focusedIndex = null;
+  stage.classList.remove('focused');
+  cardEls.forEach(c => { c.classList.remove('focused', 'dim'); c.style.pointerEvents = 'auto'; });
+  detail.classList.remove('open');
+}
+document.getElementById('closeDetail').addEventListener('click', closeFocus);
+
+/* drag to rotate */
+let dragged = false;
+stage.addEventListener('pointerdown', (e) => {
+  if (focusedIndex !== null) return;
+  dragging = true;
+  dragged = false;
+  stage.classList.add('dragging');
+  dragStartX = e.clientX;
+  lastDragX = e.clientX;
+  dragStartRotation = rotation;
+  interacted = true;
+  hint.classList.add('hide');
+});
+window.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  const dx = e.clientX - dragStartX;
+  if (Math.abs(dx) > 4) dragged = true;
+  rotation = dragStartRotation + dx * 0.28;
+  dragVelocity = (e.clientX - lastDragX) * 0.28;
+  lastDragX = e.clientX;
+  render();
+});
+window.addEventListener('pointerup', () => {
+  if (dragging){
+    dragging = false;
+    stage.classList.remove('dragging');
+    velocity = dragVelocity * 0.6;
+    setTimeout(() => { dragged = false; }, 50);
+  }
+});
+
+/* scroll to rotate */
+stage.addEventListener('wheel', (e) => {
+  if (focusedIndex !== null) return;
+  e.preventDefault();
+  rotation += e.deltaY * 0.08;
+  velocity = 0;
+  interacted = true;
+  hint.classList.add('hide');
+  render();
+}, { passive: false });
+
+/* mouse parallax tilt */
+document.addEventListener('mousemove', (e) => {
+  if (focusedIndex !== null) return;
+  const rx = (e.clientY / window.innerHeight - 0.5) * -10;
+  const ry = (e.clientX / window.innerWidth - 0.5) * 10;
+  tilt.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+});
+
+/* auto-rotate loop */
+function loop(){
+  if (!dragging && focusedIndex === null){
+    rotation += velocity;
+    velocity += (0.06 - velocity) * 0.02; // ease back to gentle drift
+    render();
+  }
+  requestAnimationFrame(loop);
+}
+render();
+loop();
+
+/* embers */
+const emberField = document.getElementById('embers');
+for (let i = 0; i < 18; i++){
+  const e = document.createElement('div');
+  e.className = 'ember';
+  const size = 2 + Math.random() * 3;
+  e.style.width = size + 'px';
+  e.style.height = size + 'px';
+  e.style.left = Math.random() * 100 + 'vw';
+  e.style.bottom = '-10px';
+  e.style.animationDuration = (14 + Math.random() * 14) + 's';
+  e.style.animationDelay = (Math.random() * 14) + 's';
+  emberField.appendChild(e);
+}
+</script>
+</body>
+</html>
